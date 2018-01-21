@@ -1,0 +1,55 @@
+// Le client arrive
+
+//cas ou:
+    billet pris sur internet:
+        passe direct a salle
+        prend une place dans la salle
+
+    pas de billet:
+        va en caisse
+
+        si c'est un abonné:
+            passe devant tout le monde
+        sinon
+            fait la queue
+        finsi
+
+        /////achat du billet/////
+        cas ou:
+            hotesse:
+                le client choisi son film
+                si l'hotesse doute:
+                    change le ticket direct
+                sinon
+                    donne le ticket
+                finsi
+                va dans la salle
+                prend une place dans la salle
+
+            caisse auto:
+                le client choisi son film
+                va dans la salle
+                prend une place dans la salle
+        finCasOu
+finCasOu
+
+//////////////dans la salle///////////
+si film lui plait
+    regarde jusqu'a la fin
+    //Fin du film
+    Libere la place
+    sors de la salle
+    quitte le ciné
+sinon
+    va changer son billet
+    libere sa place
+    change son billet
+    prend une nouvelle place
+    //// ???? est ce qu'on repasse par toute la queue ? ou une queue spéciale
+    ???? pour les échanges ?
+    va dans la nouvelle salle
+    regarde
+    libere la place
+    quitte la salle
+    quitte le ciné
+finSi
