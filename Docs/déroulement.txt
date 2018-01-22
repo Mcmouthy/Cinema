@@ -1,35 +1,53 @@
-// Le client arrive
-
+// Le client arrive                                     //liste des semaphores
+                                                        // caissesAuto.val=0
+                                                        //caisseHotesse.val=0
+                                                        //mutex.val = 1
 //cas ou:
     billet pris sur internet:
         passe direct a salle
         prend une place dans la salle
+        P(mutex)
+        nbPlacesOccupees++;
+        V(mutex)
 
     pas de billet:
         va en caisse
 
         si c'est un abonné:
-            passe devant tout le monde
+            passe devant tout le monde ??? a voir avec le prof
         sinon
             fait la queue
+
         finsi
 
         /////achat du billet/////
         cas ou:
             hotesse:
+                p(caisseHotesse)
+                p(mutex)
                 le client choisi son film
+                v(mutex)
                 si l'hotesse doute:
                     change le ticket direct
                 sinon
                     donne le ticket
                 finsi
+                v(caisseHotesse)
                 va dans la salle
+                p(mutex)
                 prend une place dans la salle
-
+                nbPlacesOccupees++
+                v(mutex)
             caisse auto:
+                p(caisseAuto)
+                p(mutex)
                 le client choisi son film
+                v(mutex)
+                v(caisseAuto)
                 va dans la salle
+                p(mutex)
                 prend une place dans la salle
+                v(mutex)
         finCasOu
 finCasOu
 
@@ -37,19 +55,24 @@ finCasOu
 si film lui plait
     regarde jusqu'a la fin
     //Fin du film
+    p(mutex)
     Libere la place
+    v(mutex)
     sors de la salle
     quitte le ciné
 sinon
     va changer son billet
-    libere sa place
-    change son billet
+
+    p(mutex)
     prend une nouvelle place
+    v(mutex)
     //// ???? est ce qu'on repasse par toute la queue ? ou une queue spéciale
     ???? pour les échanges ?
     va dans la nouvelle salle
     regarde
+    p(mutex)
     libere la place
+    v(mutex)
     quitte la salle
     quitte le ciné
 finSi
