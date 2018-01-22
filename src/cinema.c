@@ -112,11 +112,11 @@ void traitantSIGTSTP(int num) {
   {
       printf("Pb sur Sigtstp...");
   }else{
-      printf("\n---- Ctrl-C détachement du segment de mémoire partagée !-----\n");
+      printf("\n---- Ctrl-Z détachement du segment de mémoire partagée !-----\n");
       shmdt(ptr_mem_partagee);
-      printf("\n---- Ctrl-C suppression du segment de mémoire partagée !-----\n");
+      printf("\n---- Ctrl-Z suppression du segment de mémoire partagée !-----\n");
       shmctl(mem_ID,IPC_RMID,NULL);
-      printf("\n---- Ctrl-C suppression des sémaphores !-----\n");
+      printf("\n---- Ctrl-Z suppression des sémaphores !-----\n");
       semctl(semid,0,IPC_RMID,NULL);
   }
   exit(1);
@@ -127,11 +127,11 @@ void traitantSIGSTOP(int num) {
   {
       printf("Pb sur Sigstop...");
   }else{
-      printf("\n---- Ctrl-C détachement du segment de mémoire partagée !-----\n");
+      printf("\n---- kill detected détachement du segment de mémoire partagée !-----\n");
       shmdt(ptr_mem_partagee);
-      printf("\n---- Ctrl-C suppression du segment de mémoire partagée !-----\n");
+      printf("\n----kill detected suppression du segment de mémoire partagée !-----\n");
       shmctl(mem_ID,IPC_RMID,NULL);
-      printf("\n---- Ctrl-C suppression des sémaphores !-----\n");
+      printf("\n---- kill detected suppression des sémaphores !-----\n");
       semctl(semid,0,IPC_RMID,NULL);
   }
   exit(1);
@@ -203,13 +203,13 @@ void * fonc_Abonne(int i)
 	if (! fork())
 	{
 		srand(time(NULL));
-		printf("Le client %d arrive dans le cinéma\n",(int)i);
+		printf("Le client abonné %d arrive dans le cinéma\n",(int)i);
 		Client_Abonne_cinema(i,1);
 
 		/*printf("Le client %d regarde son film\n",(int)i);
 		sleep(6);
 		Se_rhabiller((int)i);*/
-		printf("Le client %d quitte le cinema\n",(int) i);
+		printf("Le client abonné %d quitte le cinema\n",(int) i);
 		exit(1);
 	}
 }
@@ -221,8 +221,8 @@ int main()
 	structure_partagee data;
 
     signal(SIGINT,traitantSIGINT); // catch ctrl+C
-    signal(SIGTSTP,traitantSIGINT); //catch ctrl+z
-    signal(SIGSTOP,traitantSIGINT); // catch kill -STOP pid
+    signal(SIGTSTP,traitantSIGTSTP); //catch ctrl+z
+    signal(SIGSTOP,traitantSIGSTOP); // catch kill -STOP pid
 
 	semid=initsem(SKEY); // initialisation du semaphore
 
@@ -249,9 +249,7 @@ int main()
 
 	for (j=1; j<=3; j++) wait(0);
 
-    /******** A LAISSER ET A COPIER DANS UNE SURCHARGE DE SIGNAL !****/
 	shmdt(ptr_mem_partagee); //detachement de la memoire partagee
-
 	printf("Suppression du sémaphore.\n");
 	semctl(semid,0,IPC_RMID,NULL);
 	printf("Suppression du segment de mémoire partagée.\n");
