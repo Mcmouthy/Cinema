@@ -11,7 +11,7 @@
 #include <sys/shm.h>
 
 
-#define NBSEM 4 // a changer selon le code et le nb de sem necessaire
+#define NBSEM 3 // a changer selon le code et le nb de sem necessaire
 #define NBPSalle 2 //Nombre de salles du cinema
 #define NBCH 2 // Nombre de caisse avec hotesse
 #define NBCA 1 // Nombre de caisse automatique
@@ -63,9 +63,8 @@ int initsem(key_t semkey)
 	} ctl_arg;
     if ((semid_init = semget(semkey, NBSEM, IFLAGS)) > 0) {
 
-	    	ushort array[NBSEM] = {0,0,0,1};  //0 val pour les caisse_hotesse, 0 val pour les caisses_auto,
-                                              // 0 pour les salles  1 pour le mutex
-                                              // a voir si on en laisse 4 ou 3 suffise
+	    	ushort array[NBSEM] = {0,0,1};  //0 val pour les caisse_hotesse, 0 val pour les caisses_auto,
+                                              // 1 pour le mutex
 	    	ctl_arg.array = array;
 	    	status = semctl(semid_init, 0, SETALL, ctl_arg);
     }
