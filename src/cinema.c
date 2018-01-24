@@ -3,14 +3,11 @@
 #include <unistd.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#include <errno.h>
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <time.h>
-#include <sys/ipc.h>
 #include <sys/shm.h>
 #include <memory.h>
-#include <malloc.h>
 #include "cinema.h"
 
 int semid;
@@ -20,8 +17,8 @@ struct sembuf sem_oper_V;  /* Operation V */
 /* initialisation de la memoire partagee*/
 int mem_ID;
 void *ptr_mem_partagee;
-salle_t *salle = NULL;
-film_t *films = NULL;
+salle_t *salle;
+film_t *films;
 
 int initsem(key_t semkey) {
     int status = 0;
@@ -107,22 +104,17 @@ void Client_cinema(int i, char internet, char caisseAuto) {
     switch (internet) {
         case 1:
             //va dans la salle direct
-
-
             break;
         default:
             if (caisseAuto) {
                 if (((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees == NBCA) {
                     printf("Le client %d se bloque car pas de caisse auto disponibles\n", i);
-
                 }
             } else {
                 if (((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees == NBCH) {
                     printf("Le client %d se bloque car pas de caisse disponible \n", i);
-
                 }
             }
-
             //choix de la salle //
             //une petite fonction qui choisit une salle serai pas mal
             // elle retourne le numero de la salle choisi
@@ -172,7 +164,7 @@ void *fonc_Abonne(int i) {
 }
 
 void displaySalle(salle_t lasalle) {
-    printf("Titre du film projeté : %s |", (char *) lasalle.filmProjete.nomFilm);
+    printf("Titre du film projeté : %s |", lasalle.filmProjete.nomFilm);
     printf("Nombre de place disponible :%d | ", lasalle.nbPlacesDispo);
     printf("Nombre de place occupées :%d | ", lasalle.nbPlacesOccupees);
     printf("Nombre de place occupées par un Abonnées :%d | ", lasalle.nbPlacesOccupeesAbonnes);
@@ -196,9 +188,9 @@ int compteurLine(char *dossier) {
     return compteur;
 }
 
-salle_t *initFilmSalle(int nombreFilm) {
-    salle = (struct salle_t *) malloc(sizeof(salle_t) * nombreFilm);
-    films = (struct film_t *) malloc(sizeof(film_t) * nombreFilm);
+void initFilmSalle(int nombreFilm) {
+    salle = (salle_t *) malloc(sizeof(salle_t) * nombreFilm);
+    films = (film_t *) malloc(sizeof(film_t) * nombreFilm);
     FILE *fp;
     fp = fopen(FILEWAY, "r");
     char line[LINESIZE];
@@ -207,10 +199,11 @@ salle_t *initFilmSalle(int nombreFilm) {
     int i = 0;
     if (fp) {
         while (fgets(line, sizeof(line), fp)) { /*on lit ligne par ligne les information*/
-            printf(" value :%d\n", i);
+            films[i].id = i;
+
             token = strtok(line, s);/*à chaque fois qu'on rencontre le séparateur s, on divise la ligne.*/
             films[i].nomFilm = malloc(strlen(token) + 1);
-            films[i].nomFilm = token;
+            strcpy(films[i].nomFilm, token);
 
             token = strtok(NULL, s);
             films[i].duree = atoi(token);
@@ -220,7 +213,7 @@ salle_t *initFilmSalle(int nombreFilm) {
 
             token = strtok(NULL, "\n"); /*on rencontre le retour à la ligne, c'est la dernière valeur.*/
             films[i].categorie = malloc(strlen(token) + 1);
-            films[i].categorie = token;
+            strcpy(films[i].categorie, token);
 
             salle[i].filmProjete = films[i];
             salle[i].nbPlacesDispo = rand() % 40 + 10;
@@ -230,10 +223,10 @@ salle_t *initFilmSalle(int nombreFilm) {
         }
         // read out the array
         fclose(fp);
-        return salle;
+
     } else {
         printf("error opening fp");
-        return NULL;
+
     }
 }
 
@@ -249,15 +242,15 @@ int main() {
 
     /*initialisation du nombre de panier et de cabine*/
     int nombreFilm = compteurLine(FILEWAY);
-    salle_t *salles = initFilmSalle(nombreFilm);
-    data.sallesCine = salles;
+    initFilmSalle(nombreFilm);
+    data.sallesCine = salle;
+    data.filmsCine = films;
     data.NbCaisseAutoOccupees = 0;
     data.NbCaisseHotesseOccupees = 0;
 
     printf("_-_-_-_SALLE_-_-_-_-\n");
     for (int i = 0; i < nombreFilm; ++i) {
         displaySalle(data.sallesCine[i]);
-
     }
     mem_ID = shmget(CLEF, sizeof(data), 0666 | IPC_CREAT);
     ptr_mem_partagee = shmat(mem_ID, NULL, 0);

@@ -11,6 +11,7 @@
 
 typedef struct // structure representant un film
 {
+    int id;
     char* nomFilm; // string avec nom du film
     int duree; // duree en secondes (normalement on met en minutes mais j'ai)
             // pas trop envie d'attendre 75 minutes que le code se debloque ;)
@@ -31,6 +32,7 @@ typedef struct //structure mise dans le segment de memoire partagee
     int NbCaisseHotesseOccupees;
     int NbCaisseAutoOccupees;
     salle_t* sallesCine; // tableau de salle a init dans main()
+    film_t* filmsCine;
 }structure_partagee;
 
 int initsem(key_t semkey);
@@ -44,6 +46,6 @@ void Client_Abonne_cinema (int i,char internet);
 void changeBillet (int i);
 void * fonc_Client(int i);
 void * fonc_Abonne(int i);
-salle_t* initFilmSalle(int nombreFilm);
+void initFilmSalle(int nombreFilm);
 int compteurLine(char *dossier);
 void displaySalle(salle_t salle);
