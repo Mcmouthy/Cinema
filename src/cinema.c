@@ -9,16 +9,9 @@
 #include <time.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-
-
-#define NBSEM 3 // a changer selon le code et le nb de sem necessaire
-#define NBPSalle 2 //Nombre de salles du cinema
-#define NBCH 2 // Nombre de caisse avec hotesse
-#define NBCA 1 // Nombre de caisse automatique
-#define IFLAGS (SEMPERM | IPC_CREAT)
-#define SKEY   (key_t) IPC_PRIVATE
-#define SEMPERM 0600
-#define CLEF 12345 // cle utilise pour le segment de memoire partagee
+#include <memory.h>
+#include <malloc.h>
+#include "cinema.h"
 
 int semid ;
 struct sembuf sem_oper_P ;  /* Operation P */
@@ -27,30 +20,8 @@ struct sembuf sem_oper_V ;  /* Operation V */
 /* initialisation de la memoire partagee*/
 int mem_ID;
 void* ptr_mem_partagee;
-
-typedef struct // structure representant un film
-{
-    char* nomFilm; // string avec nom du film
-    int duree; // duree en secondes (normalement on met en minutes mais j'ai)
-            // pas trop envie d'attendre 75 minutes que le code se debloque ;)
-    int date; //date a laquelle commence le film
-    char* categorie;//categorie du film
-}film_t;
-
-typedef struct
-{
-    film_t filmProjete; // struct avec info du film
-    int nbPlacesDispo; // nb de place dispo dans la salle
-    int nbPlacesOccupees;
-    int nbPlacesOccupeesAbonnes;
-}salle_t;
-
-typedef struct //structure mise dans le segment de memoire partagee
-{
-    int NbCaisseHotesseOccupees;
-    int NbCaisseAutoOccupees;
-    salle_t* sallesCine; // tableau de salle a init dans main()
-}structure_partagee;
+salle_t* salle=NULL;
+film_t* films=NULL;
 
 int initsem(key_t semkey)
 {
@@ -213,6 +184,71 @@ void * fonc_Abonne(int i)
 	}
 }
 
+void displaySalle(salle_t lasalle) {
+  printf("Titre du film projeté : %s |",(char*)lasalle.filmProjete.nomFilm );
+  printf("Nombre de place disponible :%d | ", lasalle.nbPlacesDispo);
+  printf("Nombre de place occupées :%d | ", lasalle.nbPlacesOccupees);
+  printf("Nombre de place occupées par un Abonnées :%d | ", lasalle.nbPlacesOccupeesAbonnes);
+  printf("\n");
+}
+
+int compteurLine(char *dossier) {
+  FILE *fp;
+  char *line = NULL;
+  size_t len = 0;
+  int compteur = 0;
+  fp = fopen(dossier, "r");
+  if (fp == NULL)
+    exit(EXIT_FAILURE);
+  while ((getline(&line, &len, fp)) != -1) {
+    compteur++;
+  }
+  fclose(fp);
+  if (line)
+    free(line);
+  return compteur;
+}
+
+salle_t* initFilmSalle(int nombreFilm) {
+    salle = (struct salle_t*)malloc(sizeof(salle_t)*nombreFilm);
+    films = (struct film_t*)malloc(sizeof(film_t)*nombreFilm);
+    FILE *fp;
+  fp = fopen(FILEWAY, "r");
+  char line[LINESIZE];
+  const char s[2] = "|";
+  char *token;
+  int i=0;
+  if (fp) {
+      while (fgets(line, sizeof(line), fp)){ /*on lit ligne par ligne les information*/
+        printf(" value :%d\n",i );
+        token = strtok(line, s);/*à chaque fois qu'on rencontre le séparateur s, on divise la ligne.*/
+        films[i].nomFilm = malloc(strlen(token) + 1);
+        films[i].nomFilm= token;
+
+        token = strtok(NULL, s);
+        films[i].duree = atoi(token);
+
+        token = strtok(NULL, s);
+        films[i].date= atoi(token);
+
+        token = strtok(NULL, "\n"); /*on rencontre le retour à la ligne, c'est la dernière valeur.*/
+        films[i].categorie = malloc(strlen(token) + 1);
+        films[i].categorie= token;
+
+        salle[i].filmProjete= films[i];
+        salle[i].nbPlacesDispo=rand()%40 +10;
+        salle[i].nbPlacesOccupees=0;
+        salle[i].nbPlacesOccupeesAbonnes=0;
+        i++;
+      }
+    // read out the array
+    fclose(fp);
+    return salle;
+  } else {
+    printf("error opening fp");
+    return NULL;
+  }
+}
 
 int main()
 {
@@ -225,28 +261,34 @@ int main()
 
 	semid=initsem(SKEY); // initialisation du semaphore
 
-	mem_ID = shmget(CLEF, sizeof(data), 0666 | IPC_CREAT);
-	ptr_mem_partagee = shmat(mem_ID, NULL, 0);
-    printf("sem et shm creer\n");
-    sleep(10);
 	/*initialisation du nombre de panier et de cabine*/
+    int nombreFilm=compteurLine(FILEWAY);
+    salle_t* salles=initFilmSalle(nombreFilm);
+    data.sallesCine= salles;
 	data.NbCaisseAutoOccupees=0;
 	data.NbCaisseHotesseOccupees=0;
-    data.sallesCine =NULL; // tableau de salle avec des films et tout
-                    // fonction qui le retourne ou fait a la main comme
-                    //des sacs !
+
+    printf("_-_-_-_SALLE_-_-_-_-\n");
+    for (int i = 0; i < nombreFilm; ++i)
+    {
+        displaySalle(data.sallesCine[i]);
+
+    }
+    mem_ID = shmget(CLEF, sizeof(data), 0666 | IPC_CREAT);
+    ptr_mem_partagee = shmat(mem_ID, NULL, 0);
+    printf("sem et shm creer\n");
 
 	*((structure_partagee*)ptr_mem_partagee) = data;
 
-	fonc_Client(0);
-	fonc_Client(1);
-	fonc_Client(2);
+    //fonc_Client(0);
+	//fonc_Client(1);
+	//fonc_Client(2);
 	//fonc_Client(3);
 	//fonc_Client(4);     // A decommenter pour plus de personne
 	//fonc_Client(5);
 	//fonc_Client(6);
 
-	for (j=1; j<=3; j++) wait(0);
+	//for (j=1; j<=3; j++) wait(0);
 
 	shmdt(ptr_mem_partagee); //detachement de la memoire partagee
 	printf("Suppression du sémaphore.\n");
