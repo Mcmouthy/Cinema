@@ -175,12 +175,10 @@ void Client_cinema(int i, char internet, char caisseAuto) {
                 V(2);
                 V(0);
 
-                printf("Le client %d prend part dans la salle %d \n", i, numsalle);
+                printf("Le client %d prend part dans la salle %s \n", i, ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].filmProjete.nomFilm);
                 sleep(10);
             }
-//            int salle_choisit = choixSalle(); /*choix de la salle*/
-            printf("Le client %d prend part dans la salle \n", i);
-            ((structure_partagee *) ptr_mem_partagee)->sallesCine[0].nbPlacesOccupees++;
+
             break;
     }
 }
