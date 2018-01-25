@@ -43,7 +43,7 @@ int initsem(key_t semkey) {
 
 void P(int semnum) {
 
-    sem_oper_P.sem_num = semnum;
+    sem_oper_P.sem_num = (unsigned short) semnum;
     sem_oper_P.sem_op = -1;
     sem_oper_P.sem_flg = 0;
     semop(semid, &sem_oper_P, 1);
@@ -52,7 +52,7 @@ void P(int semnum) {
 
 void V(int semnum) {
 
-    sem_oper_V.sem_num = semnum;
+    sem_oper_V.sem_num = (unsigned short) semnum;
     sem_oper_V.sem_op = 1;
     sem_oper_V.sem_flg = 0;
     semop(semid, &sem_oper_V, 1);
@@ -138,27 +138,27 @@ void changeBillet(int i) {
 void *fonc_Client(int i) {
     if (!fork()) {
         srand(time(NULL));
-        printf("Le client %d arrive dans le cinéma\n", (int) i);
-        Client_cinema((int) i, 1, 0);
+        printf("Le client %d arrive dans le cinéma\n", i);
+        Client_cinema(i, 1, 0);
 
         /*printf("Le client %d regarde son film\n",(int)i);
         sleep(6);
         Se_rhabiller((int)i);*/
-        printf("Le client %d quitte le cinema\n", (int) i);
+        printf("Le client %d quitte le cinema\n", i);
         exit(1);
     }
 }
 
 void *fonc_Abonne(int i) {
     if (!fork()) {
-        srand(time(NULL));
-        printf("Le client abonné %d arrive dans le cinéma\n", (int) i);
+        srand((unsigned int) time(NULL));
+        printf("Le client abonné %d arrive dans le cinéma\n", i);
         Client_Abonne_cinema(i, 1);
 
         /*printf("Le client %d regarde son film\n",(int)i);
         sleep(6);
         Se_rhabiller((int)i);*/
-        printf("Le client abonné %d quitte le cinema\n", (int) i);
+        printf("Le client abonné %d quitte le cinema\n", i);
         exit(1);
     }
 }
@@ -258,7 +258,7 @@ int main() {
 
     *((structure_partagee *) ptr_mem_partagee) = data;
 
-    //fonc_Client(0);
+//    fonc_Client(0);
     //fonc_Client(1);
     //fonc_Client(2);
     //fonc_Client(3);
