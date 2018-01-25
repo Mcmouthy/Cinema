@@ -104,34 +104,99 @@ void Client_cinema(int i, char internet, char caisseAuto) {
     switch (internet) {
         case 1:
             //va dans la salle direct
+            /*a changer*/
+            P(2);
+            ((structure_partagee *) ptr_mem_partagee)->sallesCine[0].nbPlacesOccupees++;
+            V(2);
+            printf("Le client %d prend part dans la salle %d \n", i,0);
             break;
         default:
             if (caisseAuto) {
-                if (((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees == NBCA) {
+                P(2);
+                if (((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees >= NBCA)
+                {
+                    V(2);
                     printf("Le client %d se bloque car pas de caisse auto disponibles\n", i);
+                    P(1);
+                    P(2);
                 }
+                ((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees++;
+                V(2);
+                int numSalle=0; /***changer pour la fonction de choix de rémy***/
+
+                int laissepasser=rand()%10;
+                if (laissepasser%2) //si laisse passer est impair
+                {
+                    //changement de billet car doute de l'caisse_hotesse
+                    printf("L'hotesse a des doutes et demandes au client %d de choisir un autre film\n",i);
+                    numSalle=changeBillet(i);
+                }
+                P(2);
+                ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupees++;
+                V(2);
+
+                P(2);
+                ((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees--;
+                V(2);
+                V(1);
+
+                // elle retourne le numero de la salle choisi
+                printf("Le client %d prend part dans la salle \n", i);
+
             } else {
-                if (((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees == NBCH) {
+                P(2);
+                if (((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees >= NBCH) {
                     printf("Le client %d se bloque car pas de caisse disponible \n", i);
+                    V(2);
+                    P(0);
+                    P(2);
                 }
+                ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees++;
+                V(2);
+                //choix de la salle //
+                int numsalle=0; /***changer pour la fonction de choix de rémy***/
+                printf("le client %d met du temps a choisir son film\n",i );
+                sleep(3);
+                srand(time(NULL));
+                int laissepasser=rand()%10;
+                printf("laissepasser : %d\n",laissepasser );
+                if (laissepasser%2) //si laisse passer est impair
+                {
+                    //changement de billet car doute de l'caisse_hotesse
+                    printf("L'hotesse a des doutes et demandes au client %d de choisir un autre film\n",i);
+                    sleep(3);
+                    numsalle=changeBillet(i);
+                }
+                P(2);
+                ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].nbPlacesOccupees++;
+                V(2);
+
+                P(2);
+                ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
+                V(2);
+                V(0);
+
+                printf("Le client %d prend part dans la salle %d \n", i,numsalle);
+                sleep(10);
             }
-            //choix de la salle //
-            //une petite fonction qui choisit une salle serai pas mal
-            // elle retourne le numero de la salle choisi
-            printf("Le client %d prend part dans la salle \n", i);
-            ((structure_partagee *) ptr_mem_partagee)->sallesCine[0].nbPlacesOccupees++;
             break;
     }
 }
 
 void Client_Abonne_cinema(int i, char internet) // a voir après reponse du prof
 {
+    /*choix de la salle*/
+    int numsalle=0; /******a changer*********/
+    P(2);
+    ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].nbPlacesOccupees++;
+    V(2);
+    printf("Le client %d prend part dans la salle %d\n", i,numsalle);
 
 }
 
 
-void changeBillet(int i) {
-
+int changeBillet(int i) {
+    return 0;
 }
 
 
@@ -139,7 +204,7 @@ void *fonc_Client(int i) {
     if (!fork()) {
         srand(time(NULL));
         printf("Le client %d arrive dans le cinéma\n", i);
-        Client_cinema(i, 1, 0);
+        Client_cinema(i, 0, 0);
 
         /*printf("Le client %d regarde son film\n",(int)i);
         sleep(6);
@@ -254,19 +319,17 @@ int main() {
     }
     mem_ID = shmget(CLEF, sizeof(data), 0666 | IPC_CREAT);
     ptr_mem_partagee = shmat(mem_ID, NULL, 0);
-    printf("sem et shm creer\n");
-
     *((structure_partagee *) ptr_mem_partagee) = data;
 
-//    fonc_Client(0);
-    //fonc_Client(1);
+    fonc_Client(0);
+    fonc_Client(1);
     //fonc_Client(2);
     //fonc_Client(3);
     //fonc_Client(4);     // A decommenter pour plus de personne
     //fonc_Client(5);
     //fonc_Client(6);
 
-    //for (j=1; j<=3; j++) wait(0);
+    for (j=0; j<2; j++) wait(0);
 
     shmdt(ptr_mem_partagee); //detachement de la memoire partagee
     printf("Suppression du sémaphore.\n");

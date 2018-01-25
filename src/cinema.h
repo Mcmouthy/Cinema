@@ -1,6 +1,6 @@
 #define NBSEM 3 // a changer selon le code et le nb de sem necessaire
 #define NBPSalle 2 //Nombre de salles du cinema
-#define NBCH 2 // Nombre de caisse avec hotesse
+#define NBCH 1 // Nombre de caisse avec hotesse
 #define NBCA 1 // Nombre de caisse automatique
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE
@@ -43,7 +43,7 @@ void traitantSIGTSTP(int num);
 void traitantSIGSTOP(int num);
 void Client_cinema (int i,char internet, char caisseAuto);
 void Client_Abonne_cinema (int i,char internet);
-void changeBillet (int i);
+int changeBillet (int i);
 void * fonc_Client(int i);
 void * fonc_Abonne(int i);
 void initFilmSalle(int nombreFilm);
