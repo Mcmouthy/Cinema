@@ -14,6 +14,8 @@ int semid;
 struct sembuf sem_oper_P;  /* Operation P */
 struct sembuf sem_oper_V;  /* Operation V */
 
+int choixSalle();
+
 /* initialisation de la memoire partagee*/
 int mem_ID;
 void *ptr_mem_partagee;
@@ -115,13 +117,39 @@ void Client_cinema(int i, char internet, char caisseAuto) {
                     printf("Le client %d se bloque car pas de caisse disponible \n", i);
                 }
             }
-            //choix de la salle //
-            //une petite fonction qui choisit une salle serai pas mal
-            // elle retourne le numero de la salle choisi
+            int salle_choisit = choixSalle(); /*choix de la salle*/
             printf("Le client %d prend part dans la salle \n", i);
             ((structure_partagee *) ptr_mem_partagee)->sallesCine[0].nbPlacesOccupees++;
             break;
     }
+}
+
+int choixSalle() {
+    int salleChoisit=0;
+    int i = 0;
+    int cut = 0;
+    int *salleParcourut;
+    int nombreFilm = compteurLine(FILEWAY);
+    for (int j = 0; j < nombreFilm; ++j) {
+        salleParcourut[i] = 0; /*tableau de booléen si salle parcourut ou non*/
+    }
+    while (1) {
+        int alea = rand() % nombreFilm;
+        if (salle[alea].nbPlacesDispo != salle[alea].nbPlacesOccupees) { /*salle dispo -> prendre place*/
+            salleChoisit=alea;
+            break;
+        }else{ /*salle non dispo, la salle est donc parcouru*/
+            salleParcourut[alea]=1;
+        }
+        for (int j = 0; j < nombreFilm; ++j) {
+            cut+=salleParcourut[j]; /*cut = nombre de booléen à true*/
+        }
+        if(cut == nombreFilm){  /*si cut == nombreFilm alors toutes les salles sont parcourut*/
+            salleChoisit=-1; /*le client ne choisit pas de salle*/
+            break;
+        }
+    }
+    return salleChoisit;
 }
 
 void Client_Abonne_cinema(int i, char internet) // a voir après reponse du prof
@@ -217,23 +245,21 @@ void initFilmSalle(int nombreFilm) {
 
             salle[i].filmProjete = films[i];
             salle[i].nbPlacesDispo = rand() % 40 + 10;
+//            salle[i].nbPlacesDispo = 0;
             salle[i].nbPlacesOccupees = 0;
             salle[i].nbPlacesOccupeesAbonnes = 0;
             i++;
         }
         // read out the array
         fclose(fp);
-
     } else {
         printf("error opening fp");
-
     }
 }
 
 int main() {
-    int j;
     structure_partagee data;
-
+    srand((unsigned int) time(NULL));
     signal(SIGINT, traitantSIGINT); // catch ctrl+C
     signal(SIGTSTP, traitantSIGTSTP); //catch ctrl+z
     signal(SIGSTOP, traitantSIGSTOP); // catch kill -STOP pid
@@ -257,7 +283,8 @@ int main() {
     printf("sem et shm creer\n");
 
     *((structure_partagee *) ptr_mem_partagee) = data;
-
+    int salle_choisit = choixSalle();
+    printf("%d\n", salle_choisit);
 //    fonc_Client(0);
     //fonc_Client(1);
     //fonc_Client(2);
