@@ -49,3 +49,4 @@ void * fonc_Abonne(int i);
 void initFilmSalle(int nombreFilm);
 int compteurLine(char *dossier);
 void displaySalle(salle_t salle);
+int choixSalle();

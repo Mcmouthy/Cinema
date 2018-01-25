@@ -14,8 +14,6 @@ int semid;
 struct sembuf sem_oper_P;  /* Operation P */
 struct sembuf sem_oper_V;  /* Operation V */
 
-int choixSalle();
-
 /* initialisation de la memoire partagee*/
 int mem_ID;
 void *ptr_mem_partagee;
