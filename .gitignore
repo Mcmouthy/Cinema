@@ -1,3 +1,4 @@
 .idea/*
 cmake-build-debug/*
 CMakeLists.txt/*
+src/cinema
