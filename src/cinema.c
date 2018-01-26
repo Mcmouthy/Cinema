@@ -35,7 +35,7 @@ int initsem(key_t semkey) {
     } ctl_arg;
     if ((semid_init = semget(semkey, NBSEM, IFLAGS)) > 0) {
 
-        ushort array[NBSEM] = {0, 0, 1};  //0 val pour les caisse_hotesse, 0 val pour les caisses_auto,
+        ushort array[NBSEM] = {0, 0, 1, 1, 1};  //0 val pour les caisse_hotesse, 0 val pour les caisses_auto,
         // 1 pour le mutex
         ctl_arg.array = array;
         status = semctl(semid_init, 0, SETALL, ctl_arg);
@@ -113,22 +113,22 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte) {
         case 1:
             //va dans la salle direct
             /*a changer*/
-            P(2);
+            P(MutexSallesAccess);
             ((structure_partagee *) ptr_mem_partagee)->sallesCine[0].nbPlacesOccupees++;
-            V(2);
+            V(MutexSallesAccess);
             printf("Le client %d prend part dans la salle %d \n", i, 0);
             break;
         default:
             if (caisseAuto) {
-                P(2);
+                P(MutexNBAutoOccupees);
                 if (((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees >= NBCA) {
-                    V(2);
+                    V(MutexNBAutoOccupees);
                     printf("Le client %d se bloque car pas de caisse auto disponibles\n", i);
-                    P(1);
-                    P(2);
+                    P(SemCaisseAuto);
+                    P(MutexNBAutoOccupees);
                 }
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees++;
-                V(2);
+                V(MutexNBAutoOccupees);
                 numeroSalle = choixSalle(filmJarte);
 
                 int laissepasser = rand() % 10;
@@ -141,28 +141,30 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte) {
                     numeroSalle = choixSalle(filmJarte);
                     printf("nouvelle salle : %d\n", numeroSalle);
                 }
-                P(2);
+                P(MutexSallesAccess);
                 ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].nbPlacesOccupees++;
-                V(2);
+                V(MutexSallesAccess);
 
-                P(2);
+                P(MutexNBAutoOccupees);
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees--;
-                V(2);
-                V(1);
+                V(MutexNBAutoOccupees);
+                V(SemCaisseAuto);
 
                 // elle retourne le numero de la salle choisi
                 printf("Le client %d prend part dans la salle \n", i);
 
             } else {
-                P(2);
+                P(MutexNBHotOccupees);
                 if (((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees >= NBCH) {
                     printf("Le client %d se bloque car pas de caisse disponible \n", i);
-                    V(2);
-                    P(0);
-                    P(2);
+                    V(MutexNBHotOccupees);
+                    P(SemCaisseHot);
+                }else{
+                    V(MutexNBHotOccupees);
                 }
+                P(MutexNBHotOccupees)
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees++;
-                V(2);
+                V(MutexNBHotOccupees);
                 //choix de la salle //
                 printf("le client %d met du temps a choisir son film\n", i);
                 numeroSalle = choixSalle(filmJarte);
@@ -179,14 +181,14 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte) {
                     filmJarte[numeroSalle] = 1;
                     numeroSalle = choixSalle(filmJarte);
                 }
-                P(2);
+                P(MutexSallesAccess);
                 ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].nbPlacesOccupees++;
-                V(2);
+                V(MutexSallesAccess);
 
-                P(2);
+                P(MutexNBHotOccupees);
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
-                V(2);
-                V(0);
+                V(MutexNBHotOccupees);
+                V(SemCaisseHot);
 
                 printf("Le client %d prend part dans la salle %s \n", i,
                        ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.nomFilm);
@@ -252,9 +254,9 @@ void Client_Abonne_cinema(int i, char internet) // a voir après reponse du prof
     /*choix de la salle*/
     char *filmJarte = Client_setFilmJarte(compteurLine(FILEWAY));
     int numeroSalle = choixSalle(filmJarte); /******a changer*********/
-    P(2);
+    P(MutexSallesAccess);
     ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].nbPlacesOccupees++;
-    V(2);
+    V(MutexSallesAccess);
     printf("Le client %d prend part dans la salle %d\n", i, numeroSalle);
 
 }

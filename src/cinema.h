@@ -1,4 +1,4 @@
-#define NBSEM 3 // a changer selon le code et le nb de sem necessaire
+#define NBSEM 5 // a changer selon le code et le nb de sem necessaire
 #define NBPSalle 2 //Nombre de salles du cinema
 #define NBCH 1 // Nombre de caisse avec hotesse
 #define NBCA 1 // Nombre de caisse automatique
@@ -8,6 +8,11 @@
 #define CLEF 12345 // cle utilise pour le segment de memoire partagee
 #define LINESIZE 128
 #define FILEWAY "../texts/film.txt"
+#define SemCaisseHot 0
+#define SemCaisseAuto 1
+#define MutexNBHotOccupees 2
+#define MutexNBAutoOccupees 3
+#define MutexSallesAccess 4
 
 typedef struct // structure representant un film
 {
