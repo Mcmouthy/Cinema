@@ -100,7 +100,7 @@ void traitantSIGSTOP(int num) {
     exit(1);
 }
 
-void Client_cinema(int i, char internet, char caisseAuto) {
+void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte) {
     switch (internet) {
         case 1:
             //va dans la salle direct
@@ -121,14 +121,17 @@ void Client_cinema(int i, char internet, char caisseAuto) {
                 }
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseAutoOccupees++;
                 V(2);
-                int numSalle = choixSalle(); /***changer pour la fonction de choix de rémy***/
+                int numSalle = choixSalle(filmJarte);
 
                 int laissepasser = rand() % 10;
                 if (laissepasser % 2) //si laisse passer est impair
                 {
                     //changement de billet car doute de l'caisse_hotesse
                     printf("L'hotesse a des doutes et demandes au client %d de choisir un autre film\n", i);
-                    numSalle = changeBillet(i);
+                    printf("ancienne salle : %d\n",numSalle);
+                    filmJarte[numSalle] = 1;
+                    numSalle = choixSalle(filmJarte);
+                    printf("nouvelle salle : %d\n",numSalle);
                 }
                 P(2);
                 ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupees++;
@@ -153,18 +156,22 @@ void Client_cinema(int i, char internet, char caisseAuto) {
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees++;
                 V(2);
                 //choix de la salle //
-                int numsalle = choixSalle(); /***changer pour la fonction de choix de rémy***/
                 printf("le client %d met du temps a choisir son film\n", i);
+                int numsalle = choixSalle(filmJarte);
                 sleep(3);
-                srand(time(NULL));
+                srand((unsigned int) time(NULL));
                 int laissepasser = rand() % 10;
-                printf("laissepasser : %d\n", laissepasser);
                 if (laissepasser % 2) //si laisse passer est impair
                 {
+//                    printf("Laisser passer : %d\n",laissepasser);
                     //changement de billet car doute de l'caisse_hotesse
-                    printf("L'hotesse a des doutes et demandes au client %d de choisir un autre film\n", i);
+                    printf("L'hotesse a des doutes et demandes au client %d de choisir un autre film "
+                                   "que %s \n", i,
+                           ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].filmProjete.nomFilm);
                     sleep(3);
-                    numsalle = changeBillet(i);
+                    filmJarte[numsalle] = 1;
+                    numsalle = choixSalle(filmJarte);
+                    printf("%d le nouveau film\n",numsalle);
                 }
                 P(2);
                 ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].nbPlacesOccupees++;
@@ -175,31 +182,52 @@ void Client_cinema(int i, char internet, char caisseAuto) {
                 V(2);
                 V(0);
 
-                printf("Le client %d prend part dans la salle %s \n", i, ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].filmProjete.nomFilm);
-                sleep(10);
+                printf("Le client %d prend part dans la salle %s \n", i,
+                       ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].filmProjete.nomFilm);
+                sleep(3);
+                srand((unsigned int) time(NULL));
+                int alea = rand() % 20 + 10;
+                if (alea == 11 || alea == 12 || alea == 13) {
+                    printf("le client %d change de film\n", i);
+                    filmJarte[numsalle]=1;
+                    Client_cinema(i, internet, caisseAuto, filmJarte);
+                }
             }
-
             break;
     }
 }
 
-int choixSalle() {
+char *Client_setFilmJarte(int nombreFilm) {
+    char *filmJarte = malloc(sizeof(char) * nombreFilm);
+    for (int i = 0; i < nombreFilm; ++i) {
+        filmJarte[i] = -1;
+    }
+    return filmJarte;
+}
+
+int choixSalle(char *film) {
     int i = 0;
     int salleChoisit = 0;
     int nombreFilm = compteurLine(FILEWAY);
     char *salleParcourut;
     salleParcourut = malloc(sizeof(char) * nombreFilm);
     for (int j = 0; j < nombreFilm; ++j) {
-        salleParcourut[j] = 0; /*tableau de booléen si salle parcourut ou non*/
+        if (film[j] == 1) { /*si le film est à 1, le client ne peut pas le regarder*/
+            salleParcourut[j] = 1;
+        } else {
+            salleParcourut[j] = 0; /*tableau de booléen si salle parcourut ou non*/
+        }
     }
     while (1) {
         int cut = 0;
         int alea = rand() % nombreFilm;
-        if (salle[alea].nbPlacesDispo != salle[alea].nbPlacesOccupees) { /*salle dispo -> prendre place*/
-            salleChoisit = alea;
-            break;
-        } else { /*salle non dispo, la salle est donc parcouru*/
-            salleParcourut[alea] = 1;
+        if (film[alea] != 1) {
+            if (salle[alea].nbPlacesDispo != salle[alea].nbPlacesOccupees) { /*salle dispo -> prendre place*/
+                salleChoisit = alea;
+                break;
+            } else { /*salle non dispo, la salle est donc parcouru*/
+                salleParcourut[alea] = 1;
+            }
         }
         for (int j = 0; j < nombreFilm; ++j) {
             if (salleParcourut[j] == 1) {
@@ -218,7 +246,8 @@ int choixSalle() {
 void Client_Abonne_cinema(int i, char internet) // a voir après reponse du prof
 {
     /*choix de la salle*/
-    int numsalle = choixSalle(); /******a changer*********/
+    char *filmJarte = Client_setFilmJarte(compteurLine(FILEWAY));
+    int numsalle = choixSalle(filmJarte); /******a changer*********/
     P(2);
     ((structure_partagee *) ptr_mem_partagee)->sallesCine[numsalle].nbPlacesOccupees++;
     V(2);
@@ -227,16 +256,12 @@ void Client_Abonne_cinema(int i, char internet) // a voir après reponse du prof
 }
 
 
-int changeBillet(int i) {
-    return 0;
-}
-
-
 void *fonc_Client(int i) {
     if (!fork()) {
         srand(time(NULL));
         printf("Le client %d arrive dans le cinéma\n", i);
-        Client_cinema(i, 0, 0);
+        char *filmJarte = Client_setFilmJarte(compteurLine(FILEWAY));
+        Client_cinema(i, 0, 0, filmJarte);
 
         /*printf("Le client %d regarde son film\n",(int)i);
         sleep(6);
