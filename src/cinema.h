@@ -30,9 +30,6 @@ typedef struct
 {
     film_t filmProjete; // struct avec info du film
     int nbPlacesDispo; // nb de place dispo dans la salle
-    int nbPlacesOccupees;
-    int nbPlacesOccupeesAbonnes;
-    char lancement;
 }salle_t;
 
 typedef struct //structure mise dans le segment de memoire partagee
@@ -43,6 +40,18 @@ typedef struct //structure mise dans le segment de memoire partagee
     salle_t* sallesCine; // tableau de salle a init dans main()
     film_t* filmsCine;
     int nbOccupeMonika;
+    int nbOccupeDrive;
+    int nbOccupeStarWars;
+    int nbOccupeOuiOui;
+    char lancementMonika;
+    char lancementDrive;
+    char lancementOuiOui;
+    char lancementStarWars;
+    int nbPlacesOccupeesAbonnesMonika;
+    int nbPlacesOccupeesAbonnesOuiOui;
+    int nbPlacesOccupeesAbonnesStarWars;
+    int nbPlacesOccupeesAbonnesDrive;
+
 }structure_partagee;
 
 int initsem(key_t semkey);
@@ -60,3 +69,5 @@ void initFilmSalle(int nombreFilm);
 int compteurLine(char *dossier);
 int choixSalle(char *film);
 char* Client_setFilmJarte(int nombreFilm);
+void takeSitInRoom(int numSalle);
+char checkRoom(int numSalle);

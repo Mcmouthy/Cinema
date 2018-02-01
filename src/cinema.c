@@ -18,7 +18,6 @@ struct sembuf sem_oper_V;  /* Operation V */
 
 struct timeval tm;
 
-
 /* initialisation de la memoire partagee*/
 int mem_ID;
 void *ptr_mem_partagee;
@@ -114,7 +113,7 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
             //va dans la salle direct
             /*a changer*/
             P(MutexSallesAccess);
-            ((structure_partagee *) ptr_mem_partagee)->sallesCine[0].nbPlacesOccupees++;
+            //((structure_partagee *) ptr_mem_partagee)->sallesCine[0].nbPlacesOccupees++;
             V(MutexSallesAccess);
             printf("Le client %d prend part dans la salle %d \n", i, 0);
             break;
@@ -142,7 +141,7 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
 
                 }
                 P(MutexSallesAccess);
-                ((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika++;
+                takeSitInRoom(numeroSalle);
                 V(MutexSallesAccess);
 
                 P(MutexNBAutoOccupees);
@@ -173,9 +172,7 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
                 }
 
                 P(MutexNBHotOccupees);
-                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees++;
-                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 V(MutexNBHotOccupees);
                 //choix de la salle //
                 printf("le client %d met du temps a choisir son film\n", i);
@@ -194,15 +191,15 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
                     numeroSalle = choixSalle(filmJarte);
                 }
                 P(MutexSallesAccess);
-                ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].nbPlacesOccupees++;
-                //printf("nbPlacesOccupees %d  dans salle de %s\n",((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].nbPlacesOccupees,((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.nomFilm );
-
+                takeSitInRoom(numeroSalle);
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->nbOccupeDrive);
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->nbOccupeStarWars);
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->nbOccupeOuiOui);
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika);
                 V(MutexSallesAccess);
 
                 P(MutexNBHotOccupees);
-                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
-                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 V(MutexNBHotOccupees);
                 V(SemCaisseHot);
 
@@ -222,7 +219,7 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
                     printf("le client %d attend le lancement du film %s\n",i,((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.nomFilm);
                 }
                 P(MutexSallesAccess);
-                while (((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].lancement==0)
+                while (1/*((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].lancement==0*/)
                 {
                     V(MutexSallesAccess);
                     sleep(2);
@@ -262,8 +259,8 @@ int choixSalle(char *film) {
         int alea = rand() % nombreFilms;
         if (film[alea] != 1) {
             P(MutexSallesAccess);
-            if (salle[alea].nbPlacesDispo != ((structure_partagee *) ptr_mem_partagee)->sallesCine[alea].nbPlacesOccupees
-                && ((structure_partagee *) ptr_mem_partagee)->sallesCine[alea].lancement!=1) { /*salle dispo -> prendre place*/
+            printf("%d\n",checkRoom(alea));
+            if (checkRoom(alea)) { /*salle dispo -> prendre place*/
                 salleChoisit = alea;
                 V(MutexSallesAccess);
                 break;
@@ -305,10 +302,9 @@ void Client_Abonne_cinema(int i,char* filmJarte,char firstPassage)
         P(MutexNBHotOccupees);
         V(SemAbonneAttente);
     }
-    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
     ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees++;
-    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
     V(MutexNBHotOccupees);
+
     //choix de la salle //
     printf("l'abonné %d met du temps a choisir son film\n", i);
     numSalle = choixSalle(filmJarte);
@@ -329,23 +325,17 @@ void Client_Abonne_cinema(int i,char* filmJarte,char firstPassage)
     {
         printf("Aucun film ne convient à l'abonné %d, il se part !\n",i);
         P(MutexNBHotOccupees);
-        printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
         ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
-        printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
         V(MutexNBHotOccupees);
         exit(2);
     }
     P(MutexSallesAccess);
-    ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupees++;
-    printf("nbPlacesOccupees %d  dans salle de %s\n",((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika,((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].filmProjete.nomFilm );
-    ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupeesAbonnes++;
+    takeSitInRoom(numSalle);
+    //((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupeesAbonnes++; // add it in takeSitInRoom
     V(MutexSallesAccess);
 
     P(MutexNBHotOccupees);
-    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
-
     ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
-    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
     V(MutexNBHotOccupees);
     V(SemCaisseHot);
     V(SemAbonneAttente);
@@ -361,8 +351,8 @@ void Client_Abonne_cinema(int i,char* filmJarte,char firstPassage)
     if (alea == 11 || alea == 12 || alea == 13) {
       printf("l'abonné %d change de film\n", i);
       P(MutexSallesAccess);
-      ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupees--;
-      ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupeesAbonnes--;
+      //((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupees--;
+      //((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupeesAbonnes--;
       V(MutexSallesAccess);
       filmJarte[numSalle]=1;
       firstPassage=1;
@@ -374,7 +364,7 @@ void Client_Abonne_cinema(int i,char* filmJarte,char firstPassage)
          printf("le abonné %d attend le lancement du film %s\n",i,((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].filmProjete.nomFilm);
      }
      P(MutexSallesAccess);
-     while (((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].lancement==0)
+     while (/*((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].lancement==0*/1)
      {
          V(MutexSallesAccess);
          sleep(2);
@@ -454,15 +444,76 @@ void initFilmSalle(int nombreFilm) {
 
             salle[i].filmProjete = films[i];
             salle[i].nbPlacesDispo = rand() % 30 + 10;
-            salle[i].nbPlacesOccupees = 0;
-            salle[i].nbPlacesOccupeesAbonnes = 0;
-            salle[i].lancement=0;
             i++;
         }
         // read out the array
         fclose(fp);
     } else {
         printf("error opening fp");
+    }
+}
+
+void takeSitInRoom(int numSalle){
+    //switch le numero de la salle tu fais ++ sur la bonne valeur
+    // pas de mutex pour le moment je m'en occupe.
+    switch (numSalle)
+    {
+        case 0:
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeDrive++;
+        break;
+        case 1:
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeStarWars++;
+        break;
+        case 2:
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeOuiOui++;
+        break;
+        case 3:
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika++;
+        break;
+        default:
+        break;
+    }
+    return;
+}
+
+char checkRoom(int numSalle){
+    switch (numSalle)
+    {
+        case 0:
+            if (((structure_partagee *) ptr_mem_partagee)->nbOccupeDrive <= ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesDispo)
+            {
+                return 1;
+            }else{
+                return 0;
+            }
+        break;
+        case 1:
+            if (((structure_partagee *) ptr_mem_partagee)->nbOccupeStarWars <= ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesDispo)
+            {
+                return 1;
+            }else{
+                return 0;
+            }
+        break;
+        case 2:
+            if (((structure_partagee *) ptr_mem_partagee)->nbOccupeOuiOui <= ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesDispo)
+            {
+                return 1;
+            }else{
+                return 0;
+            }
+        break;
+        case 3:
+            if (((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika <= ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesDispo)
+            {
+                return 1;
+            }else{
+                return 0;
+            }
+        break;
+        default:
+            return 0;
+        break;
     }
 }
 
@@ -480,6 +531,17 @@ int main() {
     nombreFilms = compteurLine(FILEWAY);
     initFilmSalle(nombreFilms);
     data.nbOccupeMonika=0;
+    data.nbOccupeDrive=0;
+    data.nbOccupeStarWars=0;
+    data.nbOccupeOuiOui=0;
+    data.lancementMonika=0;
+    data.lancementDrive=0;
+    data.lancementOuiOui=0;
+    data.lancementStarWars=0;
+    data.nbPlacesOccupeesAbonnesMonika=0;
+    data.nbPlacesOccupeesAbonnesOuiOui=0;
+    data.nbPlacesOccupeesAbonnesStarWars=0;
+    data.nbPlacesOccupeesAbonnesDrive=0;
     data.sallesCine = salle;
     data.filmsCine = films;
     data.NbCaisseAutoOccupees = 0;
@@ -496,7 +558,7 @@ int main() {
             fonc_Client(k);
             sleep(1);
         }else{ // sinon abonné
-            fonc_Abonne(k);
+            fonc_Client(k);
             sleep(1);
         }
         if (k%10==0)
@@ -508,16 +570,17 @@ int main() {
     printf("ATTENTION LES PROJECTIONS VONT BIENTOT COMMENCER \n");
     // for (size_t a = 0; a < NombreCheck; a++)
     // {
-        for (size_t pass = 0; pass < nombreFilms; pass++)
-        {
-            printf("nombre dans salle %d : %d\n",pass,((structure_partagee *) ptr_mem_partagee)->sallesCine[pass].nbPlacesOccupees );
+
+            printf("nombre dans salle Drive : %d\n",((structure_partagee *) ptr_mem_partagee)->nbOccupeDrive);
+            printf("nombre dans salle Star wars : %d\n",((structure_partagee *) ptr_mem_partagee)->nbOccupeStarWars);
+            printf("nombre dans salle Oui oui : %d\n",((structure_partagee *) ptr_mem_partagee)->nbOccupeOuiOui);
+            printf("nombre dans salle Monika : %d\n",((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika);
             // if ((((structure_partagee *) ptr_mem_partagee)->sallesCine[pass].nbPlacesOccupees)
             // > (((structure_partagee *) ptr_mem_partagee)->sallesCine[pass].nbPlacesOccupees*3/4))
             // {
-                ((structure_partagee *) ptr_mem_partagee)->sallesCine[pass].lancement=1;
+                //((structure_partagee *) ptr_mem_partagee)->sallesCine[pass].lancement=1;
             //}
 
-        }
 
 
 //
