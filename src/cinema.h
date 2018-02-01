@@ -1,7 +1,6 @@
 #define NBSEM 7 // a changer selon le code et le nb de sem necessaire
-#define NBPSalle 2 //Nombre de salles du cinema
-#define NBCH 1 // Nombre de caisse avec hotesse
-#define NBCA 1 // Nombre de caisse automatique
+#define NBCH 3 // Nombre de caisse avec hotesse
+#define NBCA 2 // Nombre de caisse automatique
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE
 #define SEMPERM 0600
@@ -15,6 +14,7 @@
 #define MutexSallesAccess 4
 #define MutexNbAbonnesAttente 5
 #define SemAbonneAttente 6
+#define NombreCheck 5
 
 typedef struct // structure representant un film
 {
