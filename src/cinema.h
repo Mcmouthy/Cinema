@@ -1,5 +1,5 @@
 #define NBSEM 7 // a changer selon le code et le nb de sem necessaire
-#define NBCH 3 // Nombre de caisse avec hotesse
+#define NBCH 5 // Nombre de caisse avec hotesse
 #define NBCA 2 // Nombre de caisse automatique
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE
@@ -43,10 +43,10 @@ typedef struct //structure mise dans le segment de memoire partagee
     int nbOccupeDrive;
     int nbOccupeStarWars;
     int nbOccupeOuiOui;
-    char lancementMonika;
-    char lancementDrive;
-    char lancementOuiOui;
-    char lancementStarWars;
+    int lancementMonika;
+    int lancementDrive;
+    int lancementOuiOui;
+    int lancementStarWars;
     int nbPlacesOccupeesAbonnesMonika;
     int nbPlacesOccupeesAbonnesOuiOui;
     int nbPlacesOccupeesAbonnesStarWars;
@@ -71,3 +71,6 @@ int choixSalle(char *film);
 char* Client_setFilmJarte(int nombreFilm);
 void takeSitInRoom(int numSalle);
 char checkRoom(int numSalle);
+void leaveSitInRoom(int numSalle);
+int checkForWatch(int numSalle);
+void checkForLaunch(int numSalle);
