@@ -42,6 +42,7 @@ typedef struct //structure mise dans le segment de memoire partagee
     int NbAbonnesAttente;
     salle_t* sallesCine; // tableau de salle a init dans main()
     film_t* filmsCine;
+    int nbOccupeMonika;
 }structure_partagee;
 
 int initsem(key_t semkey);

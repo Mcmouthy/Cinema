@@ -142,7 +142,7 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
 
                 }
                 P(MutexSallesAccess);
-                ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].nbPlacesOccupees++;
+                ((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika++;
                 V(MutexSallesAccess);
 
                 P(MutexNBAutoOccupees);
@@ -173,7 +173,9 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
                 }
 
                 P(MutexNBHotOccupees);
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees++;
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 V(MutexNBHotOccupees);
                 //choix de la salle //
                 printf("le client %d met du temps a choisir son film\n", i);
@@ -198,7 +200,9 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
                 V(MutexSallesAccess);
 
                 P(MutexNBHotOccupees);
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
+                printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
                 V(MutexNBHotOccupees);
                 V(SemCaisseHot);
 
@@ -301,7 +305,9 @@ void Client_Abonne_cinema(int i,char* filmJarte,char firstPassage)
         P(MutexNBHotOccupees);
         V(SemAbonneAttente);
     }
+    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
     ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees++;
+    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
     V(MutexNBHotOccupees);
     //choix de la salle //
     printf("l'abonné %d met du temps a choisir son film\n", i);
@@ -323,18 +329,23 @@ void Client_Abonne_cinema(int i,char* filmJarte,char firstPassage)
     {
         printf("Aucun film ne convient à l'abonné %d, il se part !\n",i);
         P(MutexNBHotOccupees);
+        printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
         ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
+        printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
         V(MutexNBHotOccupees);
         exit(2);
     }
     P(MutexSallesAccess);
     ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupees++;
-    printf("nbPlacesOccupees %d  dans salle de %s\n",((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupees,((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].filmProjete.nomFilm );
+    printf("nbPlacesOccupees %d  dans salle de %s\n",((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika,((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].filmProjete.nomFilm );
     ((structure_partagee *) ptr_mem_partagee)->sallesCine[numSalle].nbPlacesOccupeesAbonnes++;
     V(MutexSallesAccess);
 
     P(MutexNBHotOccupees);
+    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
+
     ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
+    printf("%d caisse prises \n",((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees);
     V(MutexNBHotOccupees);
     V(SemCaisseHot);
     V(SemAbonneAttente);
@@ -468,6 +479,7 @@ int main() {
     /*initialisation du nombre de panier et de cabine*/
     nombreFilms = compteurLine(FILEWAY);
     initFilmSalle(nombreFilms);
+    data.nbOccupeMonika=0;
     data.sallesCine = salle;
     data.filmsCine = films;
     data.NbCaisseAutoOccupees = 0;
@@ -506,15 +518,6 @@ int main() {
             //}
 
         }
-    //}
-    //fonc_Abonne(1);
-    //fonc_Abonne(2);
-    //fonc_Client(0);
-    //fonc_Client(3);
-    //fonc_Client(3);
-    //fonc_Client(4);     // A decommenter pour plus de personne
-    //fonc_Client(5);
-    //fonc_Client(6);
 
 
 //
