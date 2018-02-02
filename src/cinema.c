@@ -192,7 +192,7 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
                 }
                 if (numeroSalle==-1)
                 {
-                    printf("Aucun film ne convient à l'abonné %d, il se part !\n",i);
+                    printf("Aucun film ne convient à l'abonné %d, il quitte le cinéma !\n",i);
                     P(MutexNBHotOccupees);
                     ((structure_partagee *) ptr_mem_partagee)->NbCaisseHotesseOccupees--;
                     V(MutexNBHotOccupees);
@@ -222,20 +222,19 @@ void Client_cinema(int i, char internet, char caisseAuto, char *filmJarte,char f
                 if (firstPassage==0)
                 {
                     printf("le client %d attend le lancement du film %s\n",i,((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.nomFilm);
-                }
-
-                P(MutexSallesAccess);
-                while (!checkForWatch(numeroSalle))
-                {
-                    V(MutexSallesAccess);
-                    sleep(2);
                     P(MutexSallesAccess);
+                    while (!checkForWatch(numeroSalle))
+                    {
+                        V(MutexSallesAccess);
+                        sleep(2);
+                        P(MutexSallesAccess);
+                    }
+                    V(MutexSallesAccess);
+                    printf("le client %d regarde %s pendant %d minutes\n",i,((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.nomFilm,
+                                        ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.duree );
+                    sleep(((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.duree/3);
+                    leaveSitInRoom(numeroSalle);
                 }
-                V(MutexSallesAccess);
-                printf("le client %d regarde %s pendant %d minutes\n",i,((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.nomFilm,
-                                    ((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.duree/3 );
-                sleep(((structure_partagee *) ptr_mem_partagee)->sallesCine[numeroSalle].filmProjete.duree);
-                leaveSitInRoom(numeroSalle);
             }
             break;
     }
@@ -379,16 +378,16 @@ void leaveSitInRoom(int numSalle){
     switch (numSalle)
     {
         case 0:
-            ((structure_partagee *) ptr_mem_partagee)->nbOccupeDrive++;
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeDrive--;
         break;
         case 1:
-            ((structure_partagee *) ptr_mem_partagee)->nbOccupeStarWars++;
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeStarWars--;
         break;
         case 2:
-            ((structure_partagee *) ptr_mem_partagee)->nbOccupeOuiOui++;
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeOuiOui--;
         break;
         case 3:
-            ((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika++;
+            ((structure_partagee *) ptr_mem_partagee)->nbOccupeMonika--;
         break;
         default:
         break;
