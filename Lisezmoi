@@ -1,0 +1,8 @@
+Afin de compiler et exécuter le projet,
+    -placez vous dans le dossier src;
+    -tapez la commande "make" dans votre console;
+    -exécutez avec ./cinema;
+
+ATTENTION :
+        Ne pas déplacer ou supprimer le dossier "texts"
+        celui-ci contient les informations des films pour le cinéma.
