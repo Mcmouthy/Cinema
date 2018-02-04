@@ -1,5 +1,5 @@
 #define NBSEM 7 // a changer selon le code et le nb de sem necessaire
-#define NBCH 5 // Nombre de caisse avec hotesse
+#define NBCH 2 // Nombre de caisse avec hotesse
 #define NBCA 2 // Nombre de caisse automatique
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE
@@ -15,6 +15,7 @@
 #define MutexNbAbonnesAttente 5
 #define SemAbonneAttente 6
 #define NombreCheck 5
+#define nbCLIENT 40
 
 typedef struct // structure representant un film
 {
@@ -51,6 +52,14 @@ typedef struct //structure mise dans le segment de memoire partagee
     int nbPlacesOccupeesAbonnesOuiOui;
     int nbPlacesOccupeesAbonnesStarWars;
     int nbPlacesOccupeesAbonnesDrive;
+    int nbAboOccupeDrive;
+    int nbAboOccupeStarWars;
+    int nbAboOccupeOuiOui;
+    int nbAboOccupeMonika;
+    int annuleDrive;
+    int annuleStarWars;
+    int annuleOuioui;
+    int annuleMonika;
 
 }structure_partagee;
 
@@ -60,7 +69,7 @@ void V(int semnum);
 void traitantSIGINT(int num);
 void traitantSIGTSTP(int num);
 void traitantSIGSTOP(int num);
-void Client_cinema (int i,char internet, char caisseAuto, char *filmJarte,char firstPassage);
+void Client_cinema (int i,int internet, int caisseAuto, char *filmJarte,char firstPassage);
 void Client_Abonne_cinema (int i,char* filmJarte,char firstPassage);
 int changeBillet (int i);
 void * fonc_Client(int i);
@@ -68,9 +77,11 @@ void * fonc_Abonne(int i);
 void initFilmSalle(int nombreFilm);
 int compteurLine(char *dossier);
 int choixSalle(char *film);
+void checkToAnnule(int salle);
 char* Client_setFilmJarte(int nombreFilm);
-void takeSitInRoom(int numSalle);
+void takeSitInRoom(int numSalle,int abonne);
 char checkRoom(int numSalle);
-void leaveSitInRoom(int numSalle);
+void leaveSitInRoom(int numSalle,int abonne);
 int checkForWatch(int numSalle);
 void checkForLaunch(int numSalle);
+int checkAnnule(int numSalle);
